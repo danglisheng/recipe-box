@@ -153,7 +153,7 @@ button:hover {
   }
 @media screen and (min-width: 351px) {
   .dialog-box {
-    
+    height:auto;
     width: 500px;
     min-height: 300px;
     top: 50%;
