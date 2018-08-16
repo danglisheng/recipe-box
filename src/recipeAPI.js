@@ -1,13 +1,6 @@
-export default class LocalStorageManager {
-  set(obj) {
-    let currentState = JSON.stringify(obj);
-    localStorage.setItem("recipeBox", currentState);
-  }
-  get() {
-    let currentState = localStorage.getItem("recipeBox");
-    return JSON.parse(currentState);
-  }
-}
+const AV = require('leancloud-storage');
+const Recipe=AV.Object.extend('Recipe');
+
 const recipeIndex = [
   {
     recipe: "蒜蓉西兰花",
@@ -86,4 +79,58 @@ const recipeIndex = [
     ]
   }
 ];
-export { recipeIndex };
+class recipeAPI {
+	static addRecipe(recipe){
+		let recipeToAdd=new Recipe();
+		recipeToAdd.set('recipe',recipe.recipe);
+		recipeToAdd.set('ingredients',recipe.ingredients);
+		recipeToAdd.set('directions',recipe.directions);
+		
+		return recipeToAdd.save();
+	}
+  static editRecipe(objId,newRecipe){
+     var recipe = AV.Object.createWithoutData('Recipe', objId);
+      // 修改属性
+      recipe.set('recipe',newRecipe.recipe);
+      recipe.set('ingredients',newRecipe.ingredients);
+      recipe.set('directions',newRecipe.directions);
+      
+      // 保存到云端
+      return recipe.save();
+  }
+	static getAllRecipes(){
+		let query=new AV.Query('Recipe');
+		let allRecipes=[];
+    return query.find().then((recipes)=>{
+      if(!recipes.length){
+         recipeIndex.forEach((recipe)=>{
+        recipeAPI.addRecipe(recipe);
+       });
+      }
+			recipes.forEach((recipeItem)=>{
+				let recipe=recipeItem.get('recipe');
+				let ingredients=recipeItem.get('ingredients');
+				let directions=recipeItem.get('directions');
+				let objId=recipeItem.id;
+				allRecipes.push({
+					recipe,
+					ingredients,
+					directions,
+					objId
+				});
+			});
+			return allRecipes;
+		})
+    .catch((error)=>{
+     
+    })
+
+	}
+  static deleteRecipe(objId){
+    let recipe=AV.Object.createWithoutData('Recipe',objId);
+    return recipe.destroy().then(function(success){
+      return success;
+    });
+  }
+}
+export default recipeAPI;
